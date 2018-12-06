@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <import type="android.view.View"/>
+        <import type="android.text.TextUtils"/>
+        <variable name="item"
+                  type="com.example.reddittestclient.data.pojo.Item"/>
+    </data>
+    <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_marginTop="@dimen/one"
+            android:layout_marginBottom="@dimen/one"
+            android:layout_height="@dimen/reddit_item_height">
+        <ImageView
+                android:id="@+id/image"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:src="@mipmap/ic_launcher"
+                android:layout_width="0dp"
+                android:scaleType="centerCrop"
+                android:visibility="@{TextUtils.isEmpty(item.thumbnail) ? View.GONE : View.VISIBLE}"
+                app:layout_constraintDimensionRatio="1:1"
+                android:layout_height="match_parent"/>
+        <TextView
+                android:text="@{item.title}"
+                android:id="@+id/title"
+                android:layout_width="0dp"
+                tools:text="title"
+                app:layout_constraintStart_toEndOf="@+id/image"
+                android:paddingStart="@dimen/two"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:ignore="RtlSymmetry"/>
+        <TextView
+                app:layout_constraintTop_toBottomOf="@+id/title"
+                android:id="@+id/author"
+                tools:text="author"
+                android:text="@{item.author}"
+                app:layout_constraintStart_toEndOf="@+id/image"
+                android:paddingStart="@dimen/two"
+                android:layout_width="0dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_height="wrap_content"
+                tools:ignore="RtlSymmetry"/>
+
+    </android.support.constraint.ConstraintLayout>
+
+</layout>
