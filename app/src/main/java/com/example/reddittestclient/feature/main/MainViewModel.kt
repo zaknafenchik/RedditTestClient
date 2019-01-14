@@ -3,8 +3,7 @@ package com.example.reddittestclient.feature.main
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.util.Log
-import com.example.reddittestclient.data.pojo.Children
-import com.example.reddittestclient.data.pojo.Item
+import com.example.reddittestclient.data.pojo.*
 import com.example.reddittestclient.data.repo.Repo
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -17,7 +16,7 @@ class MainViewModel @Inject constructor(val repo: Repo) : ViewModel() {
     var after: String? = null
     val tag = MainViewModel::class.java.simpleName
     val items: MutableList<Item> = mutableListOf()
-    var data: MutableLiveData<List<Item>>? = null
+    var data: MutableLiveData<Resource<List<Item>>>? = null
         get() {
             if (field == null) {
                 field = MutableLiveData()
@@ -25,22 +24,34 @@ class MainViewModel @Inject constructor(val repo: Repo) : ViewModel() {
             }
             return field
         }
-    var isLoading: MutableLiveData<Boolean> = MutableLiveData()
 
+    private var loading = false
 
     private fun loadItems() {
         cd.add(
             repo.loadItems(after)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { isLoading.value = true }
-                .doAfterTerminate { isLoading.value = false }
-                .subscribe({
-                    after = it.data?.after
-                    it?.data?.children?.let { it1 -> mapData(it1) }?.let { it2 -> items.addAll(it2) }
-                    data?.value = items
-                }, { Log.d(tag, it.message) })
+                .doOnSubscribe {
+                    loading = true
+                    data?.value = Resource(State.LOADING)
+                }
+                .doAfterTerminate { loading = false }
+                .subscribe(
+                    { handleResponse(it) },
+                    { handleError(it) })
         )
+    }
+
+    private fun handleError(it: Throwable) {
+        Log.d(tag, it.message)
+        data?.value = Resource(State.FAILED, null, it)
+    }
+
+    private fun handleResponse(it: Thing) {
+        after = it.data?.after
+        it.data?.children?.let { it1 -> mapData(it1) }?.let { it2 -> items.addAll(it2) }
+        data?.value = Resource(State.SUCCESS, items)
     }
 
     private fun mapData(children: List<Children>): List<Item> {
@@ -57,6 +68,7 @@ class MainViewModel @Inject constructor(val repo: Repo) : ViewModel() {
     }
 
     fun loadNextPage() {
+        if (loading) return
         loadItems()
     }
 }
